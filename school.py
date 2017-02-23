@@ -18,15 +18,43 @@
 7. 上面的操作产生的数据都通过pickle序列化保存到文件里
 
 '''
-
+import uuid
 import logging
+import pickle
+import os
 logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s')
 
 
-class School(object):
-    def __init__(self,city):
+def create_uid():
+    return str(uuid.uuid1())
+
+class BaseModel(object):
+
+    def save(self):
+        file_path = os.path.join(self.db_path,str(self.uid))
+        print(os.getcwd())
+        if  not os.path.exists(self.db_path):
+            os.makedirs(self.db_path)
+        with open(file_path ,'wb') as fp:
+            pickle.dump(self,fp)
+
+    @classmethod
+    def read_obj(cls):
+        ret=[]
+        for pk in os.listdir(cls.db_path):
+            file_path = os.path.join(cls.db_path,pk)
+            with open(file_path,'rb') as fb:
+              ret.append(pickle.load(fb))
+        return ret
+    pass
+
+class School(BaseModel):
+    def __init__(self,city,school_name):
         self.city = city
-        logging.info('create a School : %s ' % self.city)
+        self.school_name = school_name
+        self.uid = create_uid()
+        self.db_path = 'db/school'
+        logging.info('create a School : %s %s' % (self.city,self.school_name))
     pass
 
 class Course(object):
@@ -52,11 +80,17 @@ class Teacher(object):
         self.teacher_id = teacher_id
     pass
 
+class Student(BaseModel):
+    pass
+
 
 
 def main():
-    bj=School('beijing')
-    sh=School('shanghai')
+    bj=School('beijing','qinhua')
+    sh=School('shanghai','beida')
+    bj.save()
+
+
     pass
 
 
